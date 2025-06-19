@@ -68,7 +68,7 @@ class Program
     }
 
     [DllImport("user32.dll", CharSet = CharSet.Ansi)]
-    public static extern bool EnumDisplayDevices(string lpDevice, uint iDevNum, ref DISPLAY_DEVICE lpDisplayDevice, uint dwFlags);
+    public static extern bool EnumDisplayDevices(string? lpDevice, uint iDevNum, ref DISPLAY_DEVICE lpDisplayDevice, uint dwFlags);
 
     [DllImport("user32.dll", CharSet = CharSet.Ansi)]
     public static extern bool EnumDisplaySettings(string deviceName, int modeNum, ref DEVMODE devMode);
@@ -167,13 +167,16 @@ class Program
     static Dictionary<string, string> GetWmiMonitorNames()
     {
         var map = new Dictionary<string, string>();
-        var searcher = new ManagementObjectSearcher(@"root\wmi", "SELECT * FROM WmiMonitorID");
-
-        foreach (ManagementObject obj in searcher.Get())
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            string instance = (string)obj["InstanceName"];
-            string name = DecodeEdidString((ushort[])obj["UserFriendlyName"]);
-            map[instance] = name;
+            var searcher = new ManagementObjectSearcher(@"root\wmi", "SELECT * FROM WmiMonitorID");
+
+            foreach (ManagementObject obj in searcher.Get())
+            {
+                string instance = (string)obj["InstanceName"];
+                string name = DecodeEdidString((ushort[])obj["UserFriendlyName"]);
+                map[instance] = name;
+            }
         }
 
         return map;
